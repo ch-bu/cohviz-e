@@ -4,15 +4,16 @@ library(spacyr)
 library(widyr)
 library(tm)
 library(tokenizers)
+library(textstem)
 
 
-stopwords <- tibble(word = stopwords::stopwords(language = "de", 
+stopwords <- tibble(word = stopwords::stopwords(language = "en", 
                                                 source = "stopwords-iso"))
 
 # Lemma lookup table
 # https://github.com/michmech/lemmatization-lists
-lemma_lookup <- read_delim("lemmatization-de_noun.txt", delim = "\t") %>%
-  set_names(c("lemma", "word"))
+# lemma_lookup <- read_delim("lemmatization-de_noun.txt", delim = "\t") %>%
+#   set_names(c("lemma", "word"))
 
 
 # Function to process texts
@@ -26,15 +27,16 @@ process_text <- function(text, treshold) {
   # Tidy text
   tidy_text <- sentences %>%
     unnest_tokens(word, text, to_lower = FALSE) %>%
-    left_join(lemma_lookup, by = "word") %>%
+    # left_join(lemma_lookup, by = "word") %>%
     mutate(
-      lemma = coalesce(lemma, word),
-      uppercase = grepl("^[A-Z]", lemma)
+      # lemma = coalesce(lemma, word),
+      word = lemmatize_words(word) %>% str_to_lower,
+      # uppercase = grepl("^[A-Z]", lemma)
     ) %>%
-    dplyr::filter(uppercase == TRUE) %>%
-    mutate(
-      word = tolower(lemma)
-    ) %>%
+    # dplyr::filter(uppercase == TRUE) %>%
+    # mutate(
+    #   word = tolower(lemma)
+    # ) %>%
     anti_join(stopwords, by = "word")
 
   # Build pairs
@@ -45,8 +47,8 @@ process_text <- function(text, treshold) {
     dplyr::filter(n > treshold)
   
   nodes <- tidy_text %>% 
-    select(-line, lemma, -word, -uppercase) %>% 
-    transmute(label = str_to_lower(lemma)) %>% 
+    select(-line, word) %>% 
+    transmute(label = str_to_lower(word)) %>% 
     rownames_to_column(var = "id")
   
   nodes <- pairs %>% select(-n) %>% 

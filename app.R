@@ -36,8 +36,8 @@ ui <- fluidPage(
     sidebarPanel(
       textAreaInput("caption", "Your Text", "Paste your text here",
                     height = "400px"),
-      sliderInput("obs", "Threshold:",
-                  min = 1, max = 10, value = 1
+      sliderInput("obs", "Threshold",
+                  min = 1, max = 20, value = 1
       ),
       actionButton("button", "Analyze text")
     ),
@@ -46,7 +46,7 @@ ui <- fluidPage(
     
     # Show a plot of the generated distribution
     mainPanel(
-      visNetworkOutput("graph", height = "80vh")
+      visNetworkOutput("graph", height = "70vh")
     )
   )
 )
